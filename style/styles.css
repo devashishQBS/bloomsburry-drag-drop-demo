@@ -1,0 +1,145 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+header {
+  background-color: lightblue;
+  text-align: center;
+  color: #555;
+  padding: 2rem 0;
+}
+
+section {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+}
+section.herosection {
+  height: 40vh;
+  background-color: #eee;
+  padding: 1rem;
+  border-radius: 5px;
+}
+
+.questionscontainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+.questionscontainer > div {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  border: 2px solid #ddd;
+  padding-bottom: 1.5rem;
+}
+.questionscontainer > div > h2 {
+  padding: 1rem 1.5rem;
+  background-color: #eee;
+}
+.questionscontainer > div > div {
+  margin-inline: 1.5rem;
+}
+.questionscontainer > div > .options ul {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  list-style: none;
+}
+.questionscontainer > div > .options ul li {
+  outline: 1px solid #ccc;
+  min-width: 150px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+.questionscontainer > div > .options ul li[data-dropzone] {
+  min-height: 40px;
+  outline: 2px dotted #bbb;
+}
+.questionscontainer > div > .options ul li[data-dropzone]:focus {
+  outline: 3px dotted green !important;
+}
+.questionscontainer > div .placing_area h3 {
+  width: 100%;
+  height: 50px;
+  background-color: #eee;
+  display: flex;
+  align-items: center;
+  padding-inline: 1rem;
+  outline: 1px solid #ccc;
+}
+.questionscontainer > div .placing_area.table {
+  display: flex;
+  align-items: stretch;
+}
+.questionscontainer > div .placing_area.table .example {
+  flex: 1;
+  background-color: #efefef;
+}
+.questionscontainer > div .placing_area.table .dropzones {
+  width: 280px;
+}
+.questionscontainer > div .placing_area.table .dropzones ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  outline: 1px solid #ccc;
+  height: 100%;
+}
+.questionscontainer > div .placing_area.table .dropzones ul li {
+  min-height: 80px;
+  padding: 1rem;
+  outline: 1px solid #ccc;
+  position: relative;
+}
+.questionscontainer > div .placing_area.table .dropzones ul li::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 92%;
+  height: 70%;
+  pointer-events: none;
+  outline: 1px solid #ccc;
+}
+
+[data-draggable],
+[data-dragging-box] {
+  background-color: #fff;
+  width: 100%;
+  padding: 1rem 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: move;
+}
+
+[data-dropzone] {
+  min-height: 80px;
+  padding: 1rem;
+  outline: 1px solid #ccc;
+  position: relative;
+  position: relative !important;
+}
+[data-dropzone]::after {
+  outline: 2px dotted #ccc !important;
+  pointer-events: none;
+}
+[data-dropzone]:focus::after {
+  outline: 3px dotted green !important;
+}
+
+div.drop-content.drop1 {
+  max-width: 300px;
+}/*# sourceMappingURL=styles.css.map */
