@@ -24,6 +24,7 @@ const K_CODES = { 38: "N", 40: "S", 39: "E", 37: "W" }; // Key codes
 
 // initaial - Box and Mouse/Touch-point coordinates and difference between both.
 let imouse = { x: null, y: null, bx: null, by: null, dx: null, dy: null };
+let mouse_last_coords = { x: 0, y: 0 };
 
 /*
 
@@ -73,14 +74,21 @@ function elementInsideDropbox(element, dropzones) {
   return dropbox;
 }
 function pointerInsideDropbox(event, dropzones) {
-  const { clientX: mx, clientY: my } = event;
+  let { x: mx, y: my } = mouse_last_coords;
 
   let dropbox = null;
 
   dropzones.forEach((b) => {
-    const box = boundRectOf(b);
-    if (my >= box.top && my <= box.bottom && mx >= box.left && mx <= box.right)
-      dropbox = b;
+    let { top, bottom, left, right } = boundRectOf(b); // dropbox coords
+
+    if (event.type === "touchend") {
+      top += window.scrollY;
+      bottom += window.scrollY;
+      left += window.scrollX;
+      right += window.scrollX;
+    }
+
+    if (my >= top && my <= bottom && mx >= left && mx <= right) dropbox = b;
   });
   return dropbox;
 }
@@ -96,12 +104,11 @@ function draggable_styles({ x, y, width, height }) {
     left: x + "px",
     boxShadow: "0 0 10px #00000080",
     outline: "1px solid gray",
-    opacity: 0.5,
     zIndex: 999,
     userSelect: "none",
     textAlign: "center",
     cursor: "move",
-    scale: 1.1,
+    scale: 1.05,
   };
 }
 function onDocument(events, handler) {
@@ -157,8 +164,6 @@ MOUSE AND TOUCH EVENTS
 
 addTabIndexToAllBoxes(DRAG_BOX_ATTR);
 
-let mouse_last_coords = { x: 0, y: 0 };
-
 // Handle Mouse Down / Touch Down
 onDocument("mousedown touchstart", (e) => {
   const target = e.target.hasAttribute(DRAG_BOX_ATTR)
@@ -182,7 +187,7 @@ onDocument("mousedown touchstart", (e) => {
   mouse_last_coords = { x: e.clientX, y: e.clientY };
 
   if (e.type === "touchstart") {
-    var touch = e.targetTouches[0];
+    let touch = e.targetTouches[0];
     imouse = init_imouse(touch.pageX, touch.pageY, x, y);
   } //
   else imouse = init_imouse(e.clientX, e.clientY, x, y);
