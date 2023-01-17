@@ -1,6 +1,6 @@
 "use strict";
 
-const D_CONTAINER_ATTR = "data-draggable-container";
+// const D_CONTAINER_ATTR = "data-draggable-container";
 const DRAG_BOX_ATTR = "data-draggable";
 const DROP_ZONE_ATTR = "data-dropzone";
 const DRAGGING_BOX_ATTR = "data-dragging-box"; // will be created dynamically by script
@@ -14,10 +14,10 @@ let box_is_selected = false;
 let box_mouse_selected = false;
 
 let dragging_box = null;
-let dragging_box_info = {
-  container: null,
-  boundary: null,
-};
+// let dragging_box_info = {
+//   container: null,
+//   boundary: null,
+// };
 
 let dragging_from = null;
 let drop_zones = [];
@@ -301,14 +301,14 @@ onDocument("mousemove touchmove", (e) => {
   let top = window.scrollY + imouse.y + mdy - imouse.dy;
   let left = window.scrollX + imouse.x + mdx - imouse.dx;
 
-  const { minX, minY, maxX, maxY } = dragging_box_info.boundary;
-  const { width, height } = boundRectOf(dragging_box);
+  //   const { minX, minY, maxX, maxY } = dragging_box_info.boundary;
+  //   const { width, height } = boundRectOf(dragging_box);
 
-  if (mdy > 0) top = Math.min(top, maxY - height);
-  else if (mdy < 0) top = Math.max(top, minY);
+  //   if (mdy > 0) top = Math.min(top, maxY - height);
+  //   else if (mdy < 0) top = Math.max(top, minY);
 
-  if (mdx > 0) left = Math.min(left, maxX - width);
-  else if (mdx < 0) left = Math.max(left, minX);
+  //   if (mdx > 0) left = Math.min(left, maxX - width);
+  //   else if (mdx < 0) left = Math.max(left, minX);
 
   // Move Effect
   style(dragging_box, {
@@ -451,24 +451,24 @@ function make_draggable_element() {
 
   scroll_zones = [scroll_zone_top, scroll_zone_bottom];
 
-  const dragables_container = box_to_drag.closest(`[${D_CONTAINER_ATTR}]`);
-  // Calculate boundaries
-  const {
-    top: minY,
-    bottom: maxY,
-    left: minX,
-    right: maxX,
-  } = boundRectOf(dragables_container);
+  //   const dragables_container = box_to_drag.closest(`[${D_CONTAINER_ATTR}]`);
+  //   // Calculate boundaries
+  //   const {
+  //     top: minY,
+  //     bottom: maxY,
+  //     left: minX,
+  //     right: maxX,
+  //   } = boundRectOf(dragables_container);
 
-  dragging_box_info = {
-    container: dragables_container,
-    boundary: {
-      minX: minX + scrollX + 10, // 17 = scrollbar width
-      minY: minY + scrollY + 5,
-      maxX: maxX + scrollX + 7,
-      maxY: maxY + scrollY,
-    },
-  };
+  //   dragging_box_info = {
+  //     container: dragables_container,
+  //     boundary: {
+  //       minX: minX + scrollX + 10, // 17 = scrollbar width
+  //       minY: minY + scrollY + 5,
+  //       maxX: maxX + scrollX + 7,
+  //       maxY: maxY + scrollY,
+  //     },
+  //   };
 
   // Hide Original element until dragging
   style(box_to_drag, { opacity: 0 });
@@ -533,10 +533,10 @@ function remove_draggable_element(drop_is_success) {
     dragging_box?.remove();
     dragging_box = null;
 
-    dragging_box_info = {
-      container: null,
-      boundary: null,
-    };
+    // dragging_box_info = {
+    //   container: null,
+    //   boundary: null,
+    // };
 
     keepInViewport(box_to_drag);
   }, transition_duration * 1000);
