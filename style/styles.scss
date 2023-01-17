@@ -169,17 +169,17 @@ div.drop-content.drop1 {
   left: 0;
   width: 100%;
   height: calc(1px * var(--zone-height));
-  backdrop-filter: blur(1px);
+  // backdrop-filter: blur(1px);
 
   z-index: 10;
 
   &.scroll-top {
-    background: linear-gradient(#00000080, #ffffff00);
+    // background: linear-gradient(#00000010, #ffffff00);
     top: 0;
   }
 
   &.scroll-bottom {
-    background: linear-gradient(#ffffff00, #00000080);
+    // background: linear-gradient(#ffffff00, #00000010);
     bottom: 0;
   }
 }
