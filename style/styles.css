@@ -142,4 +142,23 @@ section.herosection {
 
 div.drop-content.drop1 {
   max-width: 300px;
+}
+
+[data-scrolling-zone] {
+  --zone-height: 80;
+  position: fixed;
+  left: 0;
+  width: 100%;
+  height: calc(1px * var(--zone-height));
+  -webkit-backdrop-filter: blur(1px);
+          backdrop-filter: blur(1px);
+  z-index: 10;
+}
+[data-scrolling-zone].scroll-top {
+  background: linear-gradient(rgba(0, 0, 0, 0.5019607843), rgba(255, 255, 255, 0));
+  top: 0;
+}
+[data-scrolling-zone].scroll-bottom {
+  background: linear-gradient(rgba(255, 255, 255, 0), rgba(0, 0, 0, 0.5019607843));
+  bottom: 0;
 }/*# sourceMappingURL=styles.css.map */

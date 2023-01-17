@@ -3,8 +3,10 @@
 const D_CONTAINER_ATTR = "data-draggable-container";
 const DRAG_BOX_ATTR = "data-draggable";
 const DROP_ZONE_ATTR = "data-dropzone";
-const DRAGGING_BOX_ATTR = "data-dragging-box"; // created dynamically by script
+const DRAGGING_BOX_ATTR = "data-dragging-box"; // will be created dynamically by script
+const SCROLL_ZONEs_ATTR = "data-scrolling-zone";
 const MOVE_BY = 20; // used with keyboard move
+const SCROLL_ZONE_HEIGHT = 80;
 
 let box_to_drag = null;
 let box_is_focused = false;
@@ -19,16 +21,41 @@ let dragging_box_info = {
 
 let dragging_from = null;
 let drop_zones = [];
+let scroll_zones = [];
 
 const K_CODES = { 38: "N", 40: "S", 39: "E", 37: "W" }; // Key codes
 
 // initaial - Box and Mouse/Touch-point coordinates and difference between both.
 let imouse = { x: null, y: null, bx: null, by: null, dx: null, dy: null };
+let mouse_last_coords = { x: 0, y: 0 };
 
-/* UTILITY FUNCTIONS */
+/*
+
+
+
+
+
+UTILITY FUNCTIONS
+
+
+
+
+
+*/
 
 function select(str, bool) {
   return bool ? document.querySelectorAll(str) : document.querySelector(str);
+}
+function createDomElement(tag, { attrs = {}, styles = {} }) {
+  try {
+    const e = document.createElement(tag);
+
+    for (const prop in attrs) e.setAttribute(prop, attrs[prop]);
+    for (const prop in styles) e.style.setProperty(prop, attrs[prop]);
+    return e;
+  } catch (err) {
+    return err;
+  }
 }
 function style(el, styles) {
   if (el) Object.assign(el.style, styles);
@@ -61,14 +88,21 @@ function elementInsideDropbox(element, dropzones) {
   return dropbox;
 }
 function pointerInsideDropbox(event, dropzones) {
-  const { clientX: mx, clientY: my } = event;
+  let { x: mx, y: my } = mouse_last_coords;
 
   let dropbox = null;
 
   dropzones.forEach((b) => {
-    const box = boundRectOf(b);
-    if (my >= box.top && my <= box.bottom && mx >= box.left && mx <= box.right)
-      dropbox = b;
+    let { top, bottom, left, right } = boundRectOf(b); // dropbox coords
+
+    if (event.type === "touchend") {
+      top += window.scrollY;
+      bottom += window.scrollY;
+      left += window.scrollX;
+      right += window.scrollX;
+    }
+
+    if (my >= top && my <= bottom && mx >= left && mx <= right) dropbox = b;
   });
   return dropbox;
 }
@@ -84,12 +118,11 @@ function draggable_styles({ x, y, width, height }) {
     left: x + "px",
     boxShadow: "0 0 10px #00000080",
     outline: "1px solid gray",
-    opacity: 0.5,
     zIndex: 999,
     userSelect: "none",
     textAlign: "center",
     cursor: "move",
-    scale: 1.1,
+    scale: 1.05,
   };
 }
 function onDocument(events, handler) {
@@ -120,13 +153,43 @@ function keepInViewport(el) {
   if (!isElementInViewport(el))
     el.scrollIntoView({ block: "center", behavior: "smooth" });
 }
-
 function addTabIndexToAllBoxes(attribute) {
   select(`[${attribute}]`, true).forEach((box) => attrs(box, { tabindex: 0 }));
 }
-
 function removeTabIndexFromAllBoxes(attribute) {
   select(`[${attribute}]`, true).forEach((box) => attrs(box, { tabindex: "" }));
+}
+function removeScrollZones(scroll_zones) {
+  scroll_zones.forEach((zone) => zone.remove());
+}
+
+function scrollOnScrollZone(e) {
+  // SCROLL WHEN NEAR TO TOP-BOTTOM ENDS
+  if (dragging_box) {
+    const viewportHeight = window.innerHeight;
+    let cursorPosition = mouse_last_coords.y;
+
+    const box_top = dragging_box.style.top.replace("px", "");
+
+    console.log("$%^&*", e);
+    if (e.type === "touchstart") {
+      cursorPosition = e.touches[0].pageY;
+    }
+    const scrollAmount = 10;
+
+    console.log(viewportHeight, cursorPosition, box_top);
+
+    if (cursorPosition < 80 && window.scrollY) {
+      window.scrollBy(0, -scrollAmount);
+      style(dragging_box, { top: box_top - scrollAmount + "px" });
+    } //
+    else if (cursorPosition > viewportHeight - 80) {
+      window.scrollBy(0, scrollAmount);
+      style(dragging_box, { top: +box_top + scrollAmount + "px" });
+    }
+
+    window.requestAnimationFrame(() => scrollOnScrollZone(e));
+  }
 }
 
 /* 
@@ -146,8 +209,6 @@ MOUSE AND TOUCH EVENTS
 */
 
 addTabIndexToAllBoxes(DRAG_BOX_ATTR);
-
-let mouse_last_coords = { x: 0, y: 0 };
 
 // Handle Mouse Down / Touch Down
 onDocument("mousedown touchstart", (e) => {
@@ -172,7 +233,7 @@ onDocument("mousedown touchstart", (e) => {
   mouse_last_coords = { x: e.clientX, y: e.clientY };
 
   if (e.type === "touchstart") {
-    var touch = e.targetTouches[0];
+    let touch = e.targetTouches[0];
     imouse = init_imouse(touch.pageX, touch.pageY, x, y);
   } //
   else imouse = init_imouse(e.clientX, e.clientY, x, y);
@@ -184,6 +245,8 @@ onDocument("mousedown touchstart", (e) => {
 
   // identify dropzones
   drop_zones = [...select(`[${DROP_ZONE_ATTR}]`, 1)];
+
+  window.requestAnimationFrame((e) => scrollOnScrollZone(e));
 });
 
 // Handle Mouse Up / Touch Up
@@ -220,6 +283,7 @@ onDocument("mousemove touchmove", (e) => {
   // calculate: how much to move
   let mdx, mdy;
   let mouse_coords = { x: 0, y: 0 };
+  let box_y = 0;
   if (e.type === "touchmove") {
     var touch = e.targetTouches[0];
 
@@ -227,12 +291,15 @@ onDocument("mousemove touchmove", (e) => {
     mdy = touch.pageY - imouse.y;
 
     mouse_coords = { x: touch.pageX, y: touch.pageY };
+    box_y = touch.pageY - window.scrollY;
   }
   // if mouse-move
   else {
     mdx = e.clientX - imouse.x;
     mdy = e.clientY - imouse.y;
     mouse_coords = { x: e.clientX, y: e.clientY };
+
+    box_y = e.clientY;
 
     // correction for dev
     // mdx = scrollX + e.clientX - imouse.x;
@@ -252,7 +319,6 @@ onDocument("mousemove touchmove", (e) => {
   let left = scrollX + imouse.x + mdx - imouse.dx;
 
   const { minX, minY, maxX, maxY } = dragging_box_info.boundary;
-
   const { width, height } = boundRectOf(dragging_box);
 
   if (mdy > 0) top = Math.min(top, maxY - height);
@@ -273,7 +339,19 @@ onDocument("mousemove touchmove", (e) => {
 });
 
 //
-/* KEYBOARD KEY EVENTS : ACCESSIBILTY */
+/* 
+
+
+
+
+
+KEYBOARD KEY EVENTS : ACCESSIBILTY
+
+
+
+
+
+*/
 
 // Handle Tab & Space Key
 onDocument("keyup", (e) => {
@@ -380,6 +458,16 @@ function make_draggable_element() {
   // Making new node for dragging
   dragging_box = box_to_drag.cloneNode(true);
 
+  // Making Scroll Zones
+  const scroll_zone_top = createDomElement("div", {
+    attrs: { "data-scrolling-zone": "", class: "scroll-top" },
+  });
+  const scroll_zone_bottom = createDomElement("div", {
+    attrs: { "data-scrolling-zone": "", class: "scroll-bottom" },
+  });
+
+  scroll_zones = [scroll_zone_top, scroll_zone_bottom];
+
   const dragables_container = box_to_drag.closest(`[${D_CONTAINER_ATTR}]`);
   // Calculate boundaries
   const {
@@ -406,7 +494,7 @@ function make_draggable_element() {
   attrs(dragging_box, { [DRAGGING_BOX_ATTR]: "" });
   style(dragging_box, draggable_styles(boundRectOf(box_to_drag)));
 
-  select("body").appendChild(dragging_box);
+  select("body").append(dragging_box, ...scroll_zones);
 
   removeTabIndexFromAllBoxes(DRAG_BOX_ATTR);
   addTabIndexToAllBoxes(DROP_ZONE_ATTR);
@@ -422,6 +510,7 @@ function drop_draggable_element(dropbox) {
 
   attrs(dragging_from, { [DROP_ZONE_ATTR]: "", tabindex: 0 });
 
+  removeScrollZones(scroll_zones);
   box_to_drag.remove();
   box_to_drag = newBox;
   box_to_drag.focus();
@@ -450,6 +539,7 @@ function remove_draggable_element(drop_is_success) {
   });
   //   }
 
+  removeScrollZones(scroll_zones);
   setTimeout(() => {
     style(box_to_drag, { opacity: 1 });
     box_to_drag.focus();
